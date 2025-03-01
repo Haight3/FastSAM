@@ -14,8 +14,8 @@ from ultralytics.yolo.engine.exporter import Exporter
 from ultralytics.yolo.engine.model import YOLO
 from ultralytics.yolo.utils import DEFAULT_CFG, LOGGER, ROOT, is_git_dir
 from ultralytics.yolo.utils.checks import check_imgsz
-
 from ultralytics.yolo.utils.torch_utils import model_info, smart_inference_mode
+
 from .predict import FastSAMPredictor
 
 
@@ -37,14 +37,20 @@ class FastSAM(YOLO):
             (List[ultralytics.yolo.engine.results.Results]): The prediction results.
         """
         if source is None:
-            source = ROOT / 'assets' if is_git_dir() else 'https://ultralytics.com/images/bus.jpg'
+            source = (
+                ROOT / "assets"
+                if is_git_dir()
+                else "https://ultralytics.com/images/bus.jpg"
+            )
             LOGGER.warning(f"WARNING ⚠️ 'source' is missing. Using 'source={source}'.")
         overrides = self.overrides.copy()
-        overrides['conf'] = 0.25
+        overrides["conf"] = 0.25
         overrides.update(kwargs)  # prefer kwargs
-        overrides['mode'] = kwargs.get('mode', 'predict')
-        assert overrides['mode'] in ['track', 'predict']
-        overrides['save'] = kwargs.get('save', False)  # do not save by default if called in Python
+        overrides["mode"] = kwargs.get("mode", "predict")
+        assert overrides["mode"] in ["track", "predict"]
+        overrides["save"] = kwargs.get(
+            "save", False
+        )  # do not save by default if called in Python
         self.predictor = FastSAMPredictor(overrides=overrides)
         self.predictor.setup_model(model=self.model, verbose=False)
         try:
@@ -58,7 +64,7 @@ class FastSAM(YOLO):
 
     def val(self, **kwargs):
         """Run validation given dataset."""
-        overrides = dict(task='segment', mode='val')
+        overrides = dict(task="segment", mode="val")
         overrides.update(kwargs)  # prefer kwargs
         args = get_cfg(cfg=DEFAULT_CFG, overrides=overrides)
         args.imgsz = check_imgsz(args.imgsz, max_dim=1)
@@ -75,13 +81,15 @@ class FastSAM(YOLO):
         Args:
             **kwargs : Any other args accepted by the predictors. To see all args check 'configuration' section in docs
         """
-        overrides = dict(task='detect')
+        overrides = dict(task="detect")
         overrides.update(kwargs)
-        overrides['mode'] = 'export'
+        overrides["mode"] = "export"
         args = get_cfg(cfg=DEFAULT_CFG, overrides=overrides)
         args.task = self.task
         if args.imgsz == DEFAULT_CFG.imgsz:
-            args.imgsz = self.model.args['imgsz']  # use trained imgsz unless custom value is passed
+            args.imgsz = self.model.args[
+                "imgsz"
+            ]  # use trained imgsz unless custom value is passed
         if args.batch == DEFAULT_CFG.batch:
             args.batch = 1  # default to 1 if not modified
         return Exporter(overrides=args)(model=self.model)
@@ -103,4 +111,6 @@ class FastSAM(YOLO):
     def __getattr__(self, attr):
         """Raises error if object has no requested attribute."""
         name = self.__class__.__name__
-        raise AttributeError(f"'{name}' object has no attribute '{attr}'. See valid attributes below.\n{self.__doc__}")
+        raise AttributeError(
+            f"'{name}' object has no attribute '{attr}'. See valid attributes below.\n{self.__doc__}"
+        )
